@@ -2,7 +2,7 @@
   /**
    * @license
    * author: https://github.com/huxia
-   * fast.quadtree.ts.js v1.0.0
+   * fast.quadtree.ts.js v0.0.1
    * Released under the MIT license.
    */
 
