@@ -1,12 +1,16 @@
 {
   "name": "fast.quadtree.ts",
-  "description": "Hyper-performent quadtree implementation for typescript/javascript, key feature: 1. move operation support (no rebuilding every frame); 2. copy-free query (memory efficient); 3. typed game-object association & multi game-objects at same position.",
-  "version": "0.0.1",
+  "description": "Hyper-performent QuadTree implementation for typescript/javascript, key feature: 1. move operation support (no rebuilding every frame); 2. copy-free query (memory efficient); 3. typed game-object association & multi game-objects at same position.",
+  "version": "0.0.2",
   "author": "https://github.com/huxia",
-  "main": "dist/quadtree.ts.cjs.js",
-  "module": "dist/quadtree.ts.es.js",
-  "browser": "dist/quadtree.ts.js",
+  "main": "dist/fast.quadtree.ts.cjs.js",
+  "module": "dist/fast.quadtree.ts.es.js",
+  "browser": "dist/fast.quadtree.ts.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/huxia/fast.quadtree.ts"
+  },
   "dependencies": {
     "typescript": ">=4.5.5"
   },

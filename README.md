@@ -2,7 +2,12 @@
 Hyper-performent quadtree implementation for typescript/javascript.
 
 ## Note
-this is a work in progress, lack of testing & docs for now.
+This is a work in progress, lack of testing & docs for now. 
+
+Checkout `dist/test.html` after clone, it demonstrate a QuadTreeSet w/ 
+- 500000 entries
+- 5000 entries changed each frame (move / regenerate)
+- copy free query & iteration
 
 ## Key feature
 1. Move operation support (prevent rebuilding)
@@ -11,7 +16,7 @@ this is a work in progress, lack of testing & docs for now.
 
 ## Install
 ```bash
-yarn add quadtree.ts
+yarn add fast.quadtree.ts
 ```
 
 ## Usage

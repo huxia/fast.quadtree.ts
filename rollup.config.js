@@ -8,6 +8,7 @@ import pkg from './package.json';
 
 const moduleName = pkg.name.replace(/^@.*\//, '');
 const inputFileName = 'src/index.ts';
+const browserTestFileName = 'test/browser.ts';
 const author = pkg.author;
 const banner = `
   /**
@@ -111,6 +112,32 @@ export default [
       }),
       pluginNodeResolve({
         browser: false,
+      }),
+    ],
+  },
+  // browser test
+  {
+    input: browserTestFileName,
+    output: [
+      {
+        name: moduleName,
+        file: pkg.browser.replace('.js', '.browser.test.js'),
+        format: 'iife',
+        sourcemap: 'inline',
+        banner,
+      },
+    ],
+    plugins: [
+      pluginTypescript(),
+      pluginCommonjs({
+        extensions: ['.js', '.ts'],
+      }),
+      babel({
+        babelHelpers: 'bundled',
+        configFile: path.resolve(__dirname, '.babelrc.js'),
+      }),
+      pluginNodeResolve({
+        browser: true,
       }),
     ],
   },

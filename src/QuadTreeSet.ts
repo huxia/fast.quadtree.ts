@@ -29,6 +29,9 @@ export class QuadTreeSet<T> implements Set<T> {
   get size() {
     return this.quardTree.size;
   }
+  get bounds() {
+    return this.quardTree.bounds;
+  }
   add(t: T) {
     const position = this.unitPositionGetter(t);
     if (!this.quardTree.add(position, t)) {

@@ -56,25 +56,29 @@ export class QuadTree<T> {
       unitKeyGetter: QuadTree.UniqueUnitAtPositionKeyFunc,
     };
   }
-
-  add(vec: Vec2, unit?: T): boolean {
+  _add(vec: Vec2, unit?: T): false | 'added' | 'existing' {
     if (!AABB.overlapsVec(this.bounds, vec)) return false;
     if (this.depth == QuadTree.MaxDepth ||
       !this.divided && this.size < QuadTree.MaxElements) {
       const key = this.options.unitKeyGetter(vec, unit, this);
+      let result: 'existing' | 'added' = 'existing';
       if (!this.units[key]) {
         this.size ++;
+        result = 'added';
       }
       this.units[key] = {vec, unit};
-      return true;
+      return result;
     }
     if (!this.divided) this.divide();
-    const inserted = this.northWest.add(vec, unit) ||
-      this.northEast.add(vec, unit) ||
-      this.southWest.add(vec, unit) ||
-      this.southEast.add(vec, unit);
-    if (inserted) this.size ++;
+    const inserted = this.northWest._add(vec, unit) ||
+      this.northEast._add(vec, unit) ||
+      this.southWest._add(vec, unit) ||
+      this.southEast._add(vec, unit);
+    if (inserted === 'added') this.size ++;
     return inserted;
+  }
+  add(vec: Vec2, unit?: T): boolean {
+    return !!this._add(vec, unit);
   }
   private _move(
       from: Vec2,
@@ -89,7 +93,13 @@ export class QuadTree<T> {
       }
       if (to && AABB.overlapsVec(this.bounds, to)) {
         // update in-place
-        this.units[key] = {vec: to, unit};
+        const newKey = this.options.unitKeyGetter(to, unit, this);
+        if (newKey !== key) {
+          delete this.units[key];
+          this.units[newKey] = {vec: to, unit};
+        } else {
+          this.units[key] = {vec: to, unit};
+        }
         return 'moved';
       }
       delete this.units[key];
@@ -100,10 +110,12 @@ export class QuadTree<T> {
           this.northEast._move(from, to, unit) ||
           this.southWest._move(from, to, unit) ||
           this.southEast._move(from, to, unit);
-    if (to && result === 'removed') {
+    if (result === 'removed') {
       this.size --;
-      if (this.add(to, unit)) return 'moved';
-      return 'removed';
+      if (to) {
+        if (this.add(to, unit)) return 'moved';
+        return 'removed';
+      }
     }
     return result;
   }
