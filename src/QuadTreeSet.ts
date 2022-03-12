@@ -16,7 +16,38 @@ export class QuadTreePositionOutOfBoundsError extends Error {
     super(message);
   }
 }
-export class QuadTreeSet<T> implements Set<T> {
+export interface ReadonlyQuadTreeSet<T> extends ReadonlySet<T> {
+  readonly bounds: AABB;
+  [Symbol.iterator](): IterableIterator<T>;
+  queryIteratable(
+      shape: Shape | undefined,
+  ): Iterable<{vec: Vec2, unit: T}>;
+  queryReduce<A>(
+    callbackFunc: ReduceCallbackFunc<T, A>,
+    initialValue?: A): A;
+  queryReduce<A>(
+      shape: Shape,
+      callbackFunc: ReduceCallbackFunc<T, A>,
+      initialValue?: A): A;
+  queryArray(
+      shape?: Shape,
+  ): Array<{vec: Vec2, unit: T}>;
+  queryForEach(
+      shape: Shape,
+      foreachFunc: (v: {vec: Vec2, unit: T}, index: number) => void,
+  ): void;
+  queryForEach(
+      foreachFunc: (v: {vec: Vec2, unit: T}, index: number) => void,
+  ): void;
+  queryMap<A>(
+      mapFunc: (v: {vec: Vec2, unit: T}, index: number) => A,
+  ): Array<A>;
+  queryMap<A>(
+      shape: Shape,
+      mapFunc: (v: {vec: Vec2, unit: T}, index: number) => A,
+  ): Array<A>;
+}
+export class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
   static UniqueUnitAtVecKeyFunc = QuadTree.UniqueUnitAtPositionKeyFunc;
   private quardTree: QuadTree<T>;
   private unitPositionGetter: QuadMapUnitPositionGetterFunc<T>;
@@ -55,7 +86,9 @@ export class QuadTreeSet<T> implements Set<T> {
   }
   forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void): void {
     return this.quardTree.queryReduce(
-        (_, p) => callbackfn(p.unit!, p.unit!, this));
+        (_, p) => void(callbackfn(p.unit!, p.unit!, this)),
+        void(0),
+    );
   }
   entries(): IterableIterator<[T, T]> {
     return this.quardTree.queryIteratable<[T, T]>(

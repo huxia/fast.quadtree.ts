@@ -13,7 +13,44 @@ export interface QuadTreeOptions<T> {
   unitKeyGetter: QuadTreeUnitKeyFunc<T>,
   integerCoordinate?: boolean,
 }
-export class QuadTree<T> {
+export interface ReadonlyQuadTree<T> {
+  readonly bounds: AABB;
+  readonly size: number
+  has(vec: Vec2, unit?: T): boolean;
+  queryIteratable<A>(
+      mapFunc: (v: {vec: Vec2, unit?: T}) => A,
+      shape?: Shape | undefined,
+  ): Iterable<A>;
+  queryIteratable(
+      shape?: Shape | undefined,
+  ): Iterable<{vec: Vec2, unit?: T}>;
+  queryReduce<A>(
+      callbackFunc: ReduceCallbackFunc<T, A>,
+      initialValue?: A): A;
+  queryReduce<A>(
+      shape: Shape,
+      callbackFunc: ReduceCallbackFunc<T, A>,
+      initialValue?: A): A;
+  queryArray(
+      shape?: Shape,
+  ): Array<{vec: Vec2, unit?: T}>;
+  queryForEach(
+      shape: Shape,
+      foreachFunc: (v: {vec: Vec2, unit?: T}, index: number) => void,
+  ): void;
+  queryForEach(
+      foreachFunc: (v: {vec: Vec2, unit?: T}, index: number) => void,
+  ): void;
+
+  queryMap<A>(
+      mapFunc: (v: {vec: Vec2, unit?: T}, index: number) => A,
+  ): Array<A>;
+  queryMap<A>(
+      shape: Shape,
+      mapFunc: (v: {vec: Vec2, unit?: T}, index: number) => A,
+  ): Array<A>;
+}
+export class QuadTree<T> implements ReadonlyQuadTree<T> {
   static MaxElements = 8;
   static MaxDepth = 8;
   static UniqueUnitAtPositionKeyFunc = (

@@ -9,7 +9,37 @@ export declare type ReduceCallbackFunc<T, A> = (acc: A, previous: {
 export declare class QuadTreePositionOutOfBoundsError extends Error {
     constructor(message: string);
 }
-export declare class QuadTreeSet<T> implements Set<T> {
+export interface ReadonlyQuadTreeSet<T> extends ReadonlySet<T> {
+    readonly bounds: AABB;
+    [Symbol.iterator](): IterableIterator<T>;
+    queryIteratable(shape: Shape | undefined): Iterable<{
+        vec: Vec2;
+        unit: T;
+    }>;
+    queryReduce<A>(callbackFunc: ReduceCallbackFunc<T, A>, initialValue?: A): A;
+    queryReduce<A>(shape: Shape, callbackFunc: ReduceCallbackFunc<T, A>, initialValue?: A): A;
+    queryArray(shape?: Shape): Array<{
+        vec: Vec2;
+        unit: T;
+    }>;
+    queryForEach(shape: Shape, foreachFunc: (v: {
+        vec: Vec2;
+        unit: T;
+    }, index: number) => void): void;
+    queryForEach(foreachFunc: (v: {
+        vec: Vec2;
+        unit: T;
+    }, index: number) => void): void;
+    queryMap<A>(mapFunc: (v: {
+        vec: Vec2;
+        unit: T;
+    }, index: number) => A): Array<A>;
+    queryMap<A>(shape: Shape, mapFunc: (v: {
+        vec: Vec2;
+        unit: T;
+    }, index: number) => A): Array<A>;
+}
+export declare class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
     static UniqueUnitAtVecKeyFunc: (vec: Vec2, _: any, quadTree: QuadTree<any>) => string | number;
     private quardTree;
     private unitPositionGetter;
