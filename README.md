@@ -1,4 +1,4 @@
-# fast.quadtree.ts
+# fast-quadtree-ts
 Hyper-performent quadtree implementation for typescript/javascript.
 
 ## Note
@@ -16,7 +16,7 @@ Checkout `dist/test.html` after clone, it demonstrate a QuadTreeSet w/
 
 ## Install
 ```bash
-yarn add fast.quadtree.ts
+yarn add fast-quadtree-ts
 ```
 
 ## Usage

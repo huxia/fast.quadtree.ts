@@ -6,7 +6,7 @@ import {babel} from '@rollup/plugin-babel';
 import * as path from 'path';
 import pkg from './package.json';
 
-const moduleName = pkg.name.replace(/^@.*\//, '');
+const moduleName = pkg.name.replace(/^@.*\//, '').replace(/\-/g, '_');
 const inputFileName = 'src/index.ts';
 const browserTestFileName = 'test/browser.ts';
 const author = pkg.author;
@@ -94,7 +94,7 @@ export default [
         format: 'cjs',
         sourcemap: 'inline',
         banner,
-        exports: 'default',
+        exports: 'named',
       },
     ],
     external: [

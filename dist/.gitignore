@@ -1,3 +1,2 @@
-fast.quadtree.ts.*
-src/
+src/**.js
 test/
