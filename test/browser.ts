@@ -144,7 +144,7 @@ function animate(timestamp: DOMHighResTimeStamp) {
   ctxQueryResult.save();
   ctxQueryResult.fillStyle = 'green';
   let queryCount = 0;
-  qtSet.queryForEach(Shape.createEllipse(mousePos, 10), ({vec}) => {
+  qtSet.queryForEach(Shape.createEllipse(mousePos, {x: 12, y: 8}), ({vec}) => {
     ctxQueryResult.fillRect(vec.x, vec.y, 1, 1);
     queryCount ++;
   });
