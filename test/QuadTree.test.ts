@@ -10,7 +10,7 @@ describe('test QuadTree functionality', () => {
     const xySet = {} as {[key: string]: boolean};
     tree.clear();
     for (let x=0; x<1000; x++) {
-      tree.add({x, y: x/2});
+      tree.add({x, y: x/2}, undefined!);
       xySet[`${x},${x/2}`] = true;
     }
     expect(tree.size).toBe(1000);
@@ -24,7 +24,7 @@ describe('test QuadTree functionality', () => {
     tree.clear();
     const count = 20;
     for (let x=0; x<count; x++) {
-      tree.add({x, y: x/2});
+      tree.add({x, y: x/2}, undefined!);
     }
     expect(tree.queryArray().length).toBe(count);
     expect(

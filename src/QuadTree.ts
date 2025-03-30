@@ -2,7 +2,7 @@ import {Collection, Iterable} from './collection';
 import {Vec2, AABB, Shape} from './shape';
 
 export type QuadTreeUnitKeyFunc<T> = (
-  vec: Vec2, unit: T | undefined, quadTree: QuadTree<T>
+  vec: Vec2, unit: T, quadTree: QuadTree<T>
 ) => string | number;
 export type ReduceCallbackFunc<T, A> = (
     acc: A,
@@ -68,7 +68,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
 
   private divided: boolean;
 
-  private units: {[key: string | number]: {unit?: T, vec: Vec2}};
+  private units: {[key: string | number]: {unit: T, vec: Vec2}};
 
   private northWest!: QuadTree<T>;
   private northEast!: QuadTree<T>;
@@ -93,7 +93,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
       unitKeyGetter: QuadTree.UniqueUnitAtPositionKeyFunc,
     };
   }
-  _add(vec: Vec2, unit?: T): false | 'added' | 'existing' {
+  _add(vec: Vec2, unit: T): false | 'added' | 'existing' {
     if (!AABB.overlapsVec(this.bounds, vec)) return false;
     if (this.depth == QuadTree.MaxDepth ||
       !this.divided && this.size < QuadTree.MaxElements) {
@@ -114,13 +114,13 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
     if (inserted === 'added') this.size ++;
     return inserted;
   }
-  add(vec: Vec2, unit?: T): boolean {
+  add(vec: Vec2, unit: T): boolean {
     return !!this._add(vec, unit);
   }
   private _move(
       from: Vec2,
       to: Vec2 | undefined,
-      unit?: T,
+      unit: T,
   ): false | 'removed' | 'moved' {
     if (!AABB.overlapsVec(this.bounds, from)) return false;
     if (!this.divided) {
@@ -156,12 +156,12 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
     }
     return result;
   }
-  move(from: Vec2, to: Vec2, unit?: T): boolean {
+  move(from: Vec2, to: Vec2, unit: T): boolean {
     if (!AABB.overlapsVec(this.bounds, to)) return false;
     if (this._move(from, to, unit) === 'removed') throw new Error('unexpected');
     return true;
   }
-  delete(vec: Vec2, unit?: T): boolean {
+  delete(vec: Vec2, unit: T): boolean {
     return this._move(vec, undefined, unit) === 'removed';
   }
   clear() {
@@ -173,7 +173,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
       this.southWest =
       this.southEast = undefined!;
   }
-  has(vec: Vec2, unit?: T): boolean {
+  has(vec: Vec2, unit: T): boolean {
     if (!AABB.overlapsVec(this.bounds, vec)) return false;
     if (!this.divided) {
       const key = this.options.unitKeyGetter(vec, unit, this);

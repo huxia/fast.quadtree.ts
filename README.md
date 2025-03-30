@@ -26,12 +26,11 @@ The core quad tree implementation.
 import {
   QuadTree, QuadTreeSet,
   AABB, Shape,
-} from 'QuadTree.ts';
-import {} from './shape';
+} from 'fast-quadtree-ts';
 // optional custom data class
 class RobotData {
-  id: string,
-  hp: number,
+  id: string;
+  hp: number;
   constructor(id: string) {
     this.id = id;
     this.hp = 100;
@@ -72,7 +71,7 @@ const qtSet = new QuadTreeSet<Robot>(
   {center: {x: 0, y: 0}, size: {x: 400, y: 300}},
   {
     // implement key getter, supporting multi robot at same point
-    unitKeyGetter: (r: Robot) => r.id,
+    unitKeyGetter: (_, r: Robot) => r.id,
     // unit position getter & setters,
     unitPositionGetter: (r: Robot) => r.position,
   }
@@ -106,7 +105,7 @@ qtSet.has(wallE); // true
 // call Set<T>.forEach
 qtSet.forEach((r: Robot) => console.log(r.id, r.position));
 // queries & reduce, will not create arrays for memory efficiency
-qt.queryReduce(
+qtSet.queryReduce(
   Shape.createEllipse(
     {x: 200, y: 40}, // center
     30, // size
