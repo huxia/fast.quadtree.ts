@@ -49,6 +49,9 @@ export interface ReadonlyQuadTree<T> {
       shape: Shape,
       mapFunc: (v: {vec: Vec2, unit?: T}, index: number) => A,
   ): Array<A>;
+  querySize(
+      shape: Shape,
+  ): number;
 }
 export class QuadTree<T> implements ReadonlyQuadTree<T> {
   static MaxElements = 8;
@@ -74,8 +77,11 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
   private northEast!: QuadTree<T>;
   private southWest!: QuadTree<T>;
   private southEast!: QuadTree<T>;
+  private _size: number;
 
-  size: number;
+  get size() {
+    return this._size;
+  }
 
   readonly options: QuadTreeOptions<T>;
 
@@ -88,7 +94,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
     this.depth = depth;
     this.divided = false;
     this.units = {};
-    this.size = 0;
+    this._size = 0;
     this.options = options || {
       unitKeyGetter: QuadTree.UniqueUnitAtPositionKeyFunc,
     };
@@ -100,7 +106,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
       const key = this.options.unitKeyGetter(vec, unit, this);
       let result: 'existing' | 'added' = 'existing';
       if (!this.units[key]) {
-        this.size ++;
+        this._size ++;
         result = 'added';
       }
       this.units[key] = {vec, unit};
@@ -111,7 +117,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
       this.northEast._add(vec, unit) ||
       this.southWest._add(vec, unit) ||
       this.southEast._add(vec, unit);
-    if (inserted === 'added') this.size ++;
+    if (inserted === 'added') this._size ++;
     return inserted;
   }
   add(vec: Vec2, unit: T): boolean {
@@ -140,7 +146,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
         return 'moved';
       }
       delete this.units[key];
-      this.size --;
+      this._size --;
       return 'removed';
     }
     const result = this.northWest._move(from, to, unit) ||
@@ -148,7 +154,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
           this.southWest._move(from, to, unit) ||
           this.southEast._move(from, to, unit);
     if (result === 'removed') {
-      this.size --;
+      this._size --;
       if (to) {
         if (this.add(to, unit)) return 'moved';
         return 'removed';
@@ -166,7 +172,7 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
   }
   clear() {
     this.units = {};
-    this.size = 0;
+    this._size = 0;
     this.divided = false;
     this.northWest =
       this.northEast =
@@ -210,65 +216,87 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
     }
     this.units = {};
   }
+  private _queryIteratable<A>(
+      shape: Shape | undefined,
+      mapFunc: ((v: {vec: Vec2, unit?: T}, idx: number) => A) | undefined,
+      index: {index: number},
+  ): Iterable<A> {
+    if (shape && !Shape.possiblelyOverlapsAABB(shape, this.bounds)) return [];
+
+    if (!this.divided) {
+      return Collection.objectValuesToIterable(
+          this.units,
+          shape ? (v) => Shape.overlapsVec(shape, v.vec) : undefined,
+          mapFunc,
+          index,
+      ) as Iterable<A>;
+    }
+    if (mapFunc) {
+      return Collection.toIterableWithMap(
+          mapFunc,
+          index,
+          () => this.northWest._queryIteratable(shape, undefined, index),
+          () => this.northEast._queryIteratable(shape, undefined, index),
+          () => this.southWest._queryIteratable(shape, undefined, index),
+          () => this.southEast._queryIteratable(shape, undefined, index),
+      );
+    }
+    return Collection.toIterable(
+        () => this.northWest._queryIteratable(shape, undefined, index),
+        () => this.northEast._queryIteratable(shape, undefined, index),
+        () => this.southWest._queryIteratable(shape, undefined, index),
+        () => this.southEast._queryIteratable(shape, undefined, index),
+    );
+  }
   queryIteratable<A>(
-      mapFunc: (v: {vec: Vec2, unit?: T}) => A,
+      mapFunc: (v: {vec: Vec2, unit?: T}, idx: number) => A,
       shape?: Shape | undefined,
   ): Iterable<A>;
   queryIteratable(
       shape?: Shape | undefined,
   ): Iterable<{vec: Vec2, unit?: T}>;
   queryIteratable<A>(
-      mapFuncOrShape?: ((v: {vec: Vec2, unit?: T}) => A) | Shape | undefined,
+      mapFuncOrShape?: ((v: {vec: Vec2, unit?: T}, idx: number) => A) | Shape,
       shape?: Shape | undefined,
   ): Iterable<A> {
-    const mapFunc = typeof mapFuncOrShape === 'function' ?
-      mapFuncOrShape :
-      undefined;
-    if (shape && !Shape.possiblelyOverlapsAABB(shape, this.bounds)) return [];
-
-    if (!this.divided) {
-      let arr = Object.values(this.units);
-      if (shape) {
-        arr = arr.filter((r) => Shape.overlapsVec(shape, r.vec));
-      }
-      if (mapFunc) return arr.map(mapFunc);
-      return arr as any;
+    if (typeof mapFuncOrShape === 'function') {
+      return this._queryIteratable(shape, mapFuncOrShape, {index: 0});
+    } else {
+      return this._queryIteratable(undefined, undefined, {index: 0});
     }
-    if (mapFunc) {
-      return Collection.toIterableWithMap(
-          mapFunc,
-          () => this.northWest.queryIteratable(shape),
-          () => this.northEast.queryIteratable(shape),
-          () => this.southWest.queryIteratable(shape),
-          () => this.southEast.queryIteratable(shape),
-      ) as any;
-    }
-    return Collection.toIterable(
-        () => this.northWest.queryIteratable(shape),
-        () => this.northEast.queryIteratable(shape),
-        () => this.southWest.queryIteratable(shape),
-        () => this.southEast.queryIteratable(shape),
-    ) as any;
   }
   private _queryReduce<A>(
       shape: Shape | undefined,
       callbackFunc: ReduceCallbackFunc<T, A>,
-      initialValue?: A): A {
+      initialValue: A | undefined,
+      index: {index: number},
+  ): A {
     if (shape && !Shape.possiblelyOverlapsAABB(shape, this.bounds)) {
       return initialValue!;
     }
-    if (!this.divided) {
-      let arr = Object.values(this.units);
-      if (shape) {
-        arr = arr.filter((r) => Shape.overlapsVec(shape!, r.vec));
-      }
-      return arr.reduce(callbackFunc as any, initialValue) as unknown as A;
-    }
     let value: A = initialValue!;
-    value = this.northWest._queryReduce(shape, callbackFunc, value);
-    value = this.northEast._queryReduce(shape, callbackFunc, value);
-    value = this.southWest._queryReduce(shape, callbackFunc, value);
-    value = this.southEast._queryReduce(shape, callbackFunc, value);
+    if (!this.divided) {
+      if (shape) {
+        // eslint-disable-next-line guard-for-in
+        for (const k in this.units) {
+          const unit = this.units[k];
+          if (Shape.overlapsVec(shape, unit.vec)) {
+            value = callbackFunc(value, unit, index.index++)!;
+          }
+        }
+      } else {
+        // eslint-disable-next-line guard-for-in
+        for (const k in this.units) {
+          const unit = this.units[k];
+          value = callbackFunc(value, unit, index.index++)!;
+        }
+      }
+      return value;
+    }
+    value = this.northWest._queryReduce(shape, callbackFunc, value, index);
+    value = this.northEast._queryReduce(shape, callbackFunc, value, index);
+    value = this.southWest._queryReduce(shape, callbackFunc, value, index);
+    value = this.southEast._queryReduce(shape, callbackFunc, value, index);
     return value;
   }
 
@@ -287,12 +315,16 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
       return this._queryReduce(
           undefined,
           shapeOrCallbackFunc,
-          callbackFuncOrInitialValue as A);
+          callbackFuncOrInitialValue as A,
+          {index: 0},
+      );
     } else {
       return this._queryReduce(
           shapeOrCallbackFunc,
           callbackFuncOrInitialValue as ReduceCallbackFunc<T, A>,
-          initialValue);
+          initialValue,
+          {index: 0},
+      );
     }
   }
 
@@ -304,7 +336,10 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
         (arr, v) => {
           arr.push(v);
           return arr;
-        }, []);
+        },
+        [],
+        {index: 0},
+    );
   }
 
   queryForEach(
@@ -322,12 +357,18 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
     if (typeof shapeOrForeachFunc === 'function') {
       this._queryReduce<void>(
           undefined,
-          (_, v, index) => shapeOrForeachFunc(v, index));
+          (_, v, index) => shapeOrForeachFunc(v, index),
+          undefined,
+          {index: 0},
+      );
     } else {
       if (!foreachFunc) return;
       this._queryReduce<void>(
           shapeOrForeachFunc,
-          (_, v, index) => foreachFunc(v, index));
+          (_, v, index) => foreachFunc(v, index),
+          undefined,
+          {index: 0},
+      );
     }
   }
 
@@ -350,7 +391,9 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
             arr.push(shapeOrMapFunc(v, index));
             return arr;
           },
-          []);
+          [],
+          {index: 0},
+      );
     } else {
       if (!mapFunc) return [];
       return this._queryReduce<Array<A>>(
@@ -359,8 +402,20 @@ export class QuadTree<T> implements ReadonlyQuadTree<T> {
             arr.push(mapFunc(v, index));
             return arr;
           },
-          []);
+          [],
+          {index: 0},
+      );
     }
+  }
+  querySize(
+      shape: Shape,
+  ): number {
+    return this._queryReduce<number>(
+        shape,
+        (size) => size + 1,
+        0,
+        {index: 0},
+    );
   }
   _dumpToString(result: string[]) {
     const prefix = '            '.substring(0, this.depth);

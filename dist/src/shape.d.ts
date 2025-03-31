@@ -10,25 +10,25 @@ export declare namespace AABB {
     function overlapsVec(aabb: AABB, vec: Vec2): boolean;
     function overlapsAABB(one: AABB, another: AABB): boolean;
 }
-declare type RectangleShape = {
+type RectangleShape = {
     type: 'rectangle';
 } & AABB;
-declare type EllipseShape = {
+type EllipseShape = {
     type: 'ellipse';
 } & AABB;
-declare type CircleShape = {
+type CircleShape = {
     type: 'circle';
 } & {
     center: Vec2;
     size: number;
 };
-declare type SquareShape = {
+type SquareShape = {
     type: 'square';
 } & {
     center: Vec2;
     size: number;
 };
-export declare type Shape = RectangleShape | EllipseShape | CircleShape | SquareShape;
+export type Shape = RectangleShape | EllipseShape | CircleShape | SquareShape;
 export declare namespace Shape {
     function overlapsVec(shape: Shape, vec: Vec2): boolean;
     function possiblelyOverlapsAABB(shape: Shape, aabb: AABB): boolean;

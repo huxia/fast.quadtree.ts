@@ -7,11 +7,10 @@ This is a work in progress, lack of testing & docs for now.
 Checkout `dist/test.html` after clone, it demonstrate a QuadTreeSet w/ 
 - 500000 entries
 - 5000 entries changed each frame (move / regenerate)
-- copy free query & iteration
 
 ## Key feature
 1. Move operation support (prevent rebuilding)
-2. Non-copy query (memory efficient)
+2. Copy-free queries (memory efficient, GC friendly)
 3. Typed custom data association & multi custom data objects (e.g. game objects) at same position
 
 ## Install
