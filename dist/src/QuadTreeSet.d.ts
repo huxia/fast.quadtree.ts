@@ -40,10 +40,10 @@ export interface ReadonlyQuadTreeSet<T> extends ReadonlySet<T> {
     }, index: number) => A): Array<A>;
 }
 export declare class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
-    static UniqueUnitAtVecKeyFunc: (vec: Vec2, _: any, quadTree: QuadTree<any>) => string | number;
+    static UniqueUnitAtVecKeyFunc: (vec: Vec2, _: any, quadTree: QuadTree<any>) => string;
     private quardTree;
     private unitPositionGetter;
-    constructor(bounds: AABB, options: QuadTreeOptions<T> & {
+    constructor(bounds: AABB, options: Partial<QuadTreeOptions<T>> & {
         unitPositionGetter: QuadMapUnitPositionGetterFunc<T>;
     });
     get size(): number;

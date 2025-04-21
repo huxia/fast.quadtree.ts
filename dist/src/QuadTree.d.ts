@@ -7,7 +7,6 @@ export type ReduceCallbackFunc<T, A> = (acc: A, previous: {
 }, index: number) => A | undefined;
 export interface QuadTreeOptions<T> {
     unitKeyGetter: QuadTreeUnitKeyFunc<T>;
-    integerCoordinate?: boolean;
 }
 export interface ReadonlyQuadTree<T> {
     readonly bounds: AABB;
@@ -48,7 +47,7 @@ export interface ReadonlyQuadTree<T> {
 export declare class QuadTree<T> implements ReadonlyQuadTree<T> {
     static MaxElements: number;
     static MaxDepth: number;
-    static UniqueUnitAtPositionKeyFunc: (vec: Vec2, _: any, quadTree: QuadTree<any>) => string | number;
+    static UniqueUnitAtPositionKeyFunc: (vec: Vec2, _: any, quadTree: QuadTree<any>) => string;
     bounds: AABB;
     private depth;
     private divided;
@@ -60,7 +59,7 @@ export declare class QuadTree<T> implements ReadonlyQuadTree<T> {
     private _size;
     get size(): number;
     readonly options: QuadTreeOptions<T>;
-    constructor(bounds: AABB, options?: QuadTreeOptions<T>, depth?: number);
+    constructor(bounds: AABB, options?: Partial<QuadTreeOptions<T>>, depth?: number);
     _add(vec: Vec2, unit: T): false | 'added' | 'existing';
     add(vec: Vec2, unit: T): boolean;
     private _move;
