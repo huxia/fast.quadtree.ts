@@ -1,7 +1,7 @@
 import { Iterable } from './collection';
 import { Vec2, AABB, Shape } from './shape';
-export declare type QuadTreeUnitKeyFunc<T> = (vec: Vec2, unit: T | undefined, quadTree: QuadTree<T>) => string | number;
-export declare type ReduceCallbackFunc<T, A> = (acc: A, previous: {
+export type QuadTreeUnitKeyFunc<T> = (vec: Vec2, unit: T, quadTree: QuadTree<T>) => string | number;
+export type ReduceCallbackFunc<T, A> = (acc: A, previous: {
     vec: Vec2;
     unit?: T;
 }, index: number) => A | undefined;
@@ -43,6 +43,7 @@ export interface ReadonlyQuadTree<T> {
         vec: Vec2;
         unit?: T;
     }, index: number) => A): Array<A>;
+    querySize(shape: Shape): number;
 }
 export declare class QuadTree<T> implements ReadonlyQuadTree<T> {
     static MaxElements: number;
@@ -56,21 +57,23 @@ export declare class QuadTree<T> implements ReadonlyQuadTree<T> {
     private northEast;
     private southWest;
     private southEast;
-    size: number;
+    private _size;
+    get size(): number;
     readonly options: QuadTreeOptions<T>;
     constructor(bounds: AABB, options?: QuadTreeOptions<T>, depth?: number);
-    _add(vec: Vec2, unit?: T): false | 'added' | 'existing';
-    add(vec: Vec2, unit?: T): boolean;
+    _add(vec: Vec2, unit: T): false | 'added' | 'existing';
+    add(vec: Vec2, unit: T): boolean;
     private _move;
-    move(from: Vec2, to: Vec2, unit?: T): boolean;
-    delete(vec: Vec2, unit?: T): boolean;
+    move(from: Vec2, to: Vec2, unit: T): boolean;
+    delete(vec: Vec2, unit: T): boolean;
     clear(): void;
-    has(vec: Vec2, unit?: T): boolean;
+    has(vec: Vec2, unit: T): boolean;
     private divide;
+    private _queryIteratable;
     queryIteratable<A>(mapFunc: (v: {
         vec: Vec2;
         unit?: T;
-    }) => A, shape?: Shape | undefined): Iterable<A>;
+    }, idx: number) => A, shape?: Shape | undefined): Iterable<A>;
     queryIteratable(shape?: Shape | undefined): Iterable<{
         vec: Vec2;
         unit?: T;
@@ -98,6 +101,7 @@ export declare class QuadTree<T> implements ReadonlyQuadTree<T> {
         vec: Vec2;
         unit?: T;
     }, index: number) => A): Array<A>;
+    querySize(shape: Shape): number;
     _dumpToString(result: string[]): string[];
     toString(): string;
 }

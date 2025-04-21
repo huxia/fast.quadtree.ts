@@ -1,8 +1,8 @@
 import { QuadTree, QuadTreeOptions } from './QuadTree';
 import { AABB, Shape, Vec2 } from './shape';
-export declare type QuadMapUnitPositionGetterFunc<T> = (o: T) => Vec2;
-export declare type QuadMapUnitPositionSetterFunc<T> = (o: T, position: Vec2) => void;
-export declare type ReduceCallbackFunc<T, A> = (acc: A, previous: {
+export type QuadMapUnitPositionGetterFunc<T> = (o: T) => Vec2;
+export type QuadMapUnitPositionSetterFunc<T> = (o: T, position: Vec2) => void;
+export type ReduceCallbackFunc<T, A> = (acc: A, previous: {
     vec: Vec2;
     unit: T;
 }, index: number) => A | undefined;
@@ -11,7 +11,7 @@ export declare class QuadTreePositionOutOfBoundsError extends Error {
 }
 export interface ReadonlyQuadTreeSet<T> extends ReadonlySet<T> {
     readonly bounds: AABB;
-    [Symbol.iterator](): IterableIterator<T>;
+    [Symbol.iterator](): SetIterator<T>;
     queryIteratable(shape: Shape | undefined): Iterable<{
         vec: Vec2;
         unit: T;
@@ -53,12 +53,12 @@ export declare class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
     delete(t: T): boolean;
     has(t: T): boolean;
     clear(): void;
-    forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void): void;
-    entries(): IterableIterator<[T, T]>;
-    keys(): IterableIterator<T>;
-    values(): IterableIterator<T>;
+    forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void;
+    entries(): any;
+    keys(): any;
+    values(): any;
     get [Symbol.toStringTag](): string;
-    [Symbol.iterator](): IterableIterator<T>;
+    [Symbol.iterator](): any;
     queryIteratable(shape: Shape | undefined): Iterable<{
         vec: Vec2;
         unit: T;
@@ -85,4 +85,5 @@ export declare class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
         vec: Vec2;
         unit: T;
     }, index: number) => A): Array<A>;
+    querySize(shape: Shape): number;
 }

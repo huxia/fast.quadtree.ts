@@ -18,7 +18,7 @@ export class QuadTreePositionOutOfBoundsError extends Error {
 }
 export interface ReadonlyQuadTreeSet<T> extends ReadonlySet<T> {
   readonly bounds: AABB;
-  [Symbol.iterator](): IterableIterator<T>;
+  [Symbol.iterator](): SetIterator<T>;
   queryIteratable(
       shape: Shape | undefined,
   ): Iterable<{vec: Vec2, unit: T}>;
@@ -51,7 +51,7 @@ export class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
   static UniqueUnitAtVecKeyFunc = QuadTree.UniqueUnitAtPositionKeyFunc;
   private quardTree: QuadTree<T>;
   private unitPositionGetter: QuadMapUnitPositionGetterFunc<T>;
-  constructor(bounds: AABB, options: QuadTreeOptions<T> & {
+  constructor(bounds: AABB, options: Partial<QuadTreeOptions<T>> & {
     unitPositionGetter: QuadMapUnitPositionGetterFunc<T>,
   }) {
     this.quardTree = new QuadTree(bounds, options);
@@ -84,27 +84,30 @@ export class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
   clear() {
     this.quardTree.clear();
   }
-  forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void): void {
+  forEach(
+      callbackfn: (value: T, value2: T, set: Set<T>) => void,
+      thisArg?: any,
+  ): void {
     return this.quardTree.queryReduce(
-        (_, p) => void(callbackfn(p.unit!, p.unit!, this)),
+        (_, p) => void(callbackfn(p.unit!, p.unit!, thisArg)),
         void(0),
     );
   }
-  entries(): IterableIterator<[T, T]> {
+  entries() {
     return this.quardTree.queryIteratable<[T, T]>(
         (p) => [p.unit!, p.unit!]) as any;
   }
-  keys(): IterableIterator<T> {
+  keys() {
     return this.values();
   }
-  values(): IterableIterator<T> {
+  values() {
     return this.quardTree.queryIteratable<T>(
         (p) => p.unit!) as any;
   }
   get [Symbol.toStringTag](): string {
     return this.quardTree.toString();
   }
-  [Symbol.iterator](): IterableIterator<T> {
+  [Symbol.iterator]() {
     return this.values();
   }
   queryIteratable(
@@ -164,5 +167,10 @@ export class QuadTreeSet<T> implements Set<T>, ReadonlyQuadTreeSet<T> {
       mapFunc?: (v: {vec: Vec2, unit: T}, index: number) => A,
   ): Array<A> {
     return this.quardTree.queryMap(shapeOrMapFunc as Shape, mapFunc as any);
+  }
+  querySize(
+      shape: Shape,
+  ): number {
+    return this.quardTree.querySize(shape);
   }
 }

@@ -14,8 +14,8 @@ describe('test Collection.toArray', () => {
 describe('test Collection.toIterableWithFilter', () => {
   test('iterate iteratable', () => {
     const iteratable = Collection.toIterable(
-        generatorFunc,
-        () => [4, 5, 6],
+        generatorFunc(),
+        [4, 5, 6],
         generatorFunc,
     );
     let str = '';
@@ -27,6 +27,7 @@ describe('test Collection.toIterableWithFilter', () => {
   test('iteratable with filters', () => {
     const iteratable = Collection.toIterableWithFilter(
         (i) => !!(i%2),
+        {index: 0},
         generatorFunc,
         () => [4, 5, 6],
         generatorFunc,

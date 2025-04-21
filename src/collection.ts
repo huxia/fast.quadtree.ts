@@ -21,11 +21,12 @@ export namespace Collection {
     return r;
   }
   export function* toIterable<T>(
-      ...childIterators: (() => Collection<T>)[]
+      ...childIterators: (undefined | (() => Collection<T>) | Collection<T>)[]
   ) {
-    for (const func of childIterators) {
-      if (!func) continue;
-      const iterator = func();
+    for (const funcOrCollection of childIterators) {
+      if (!funcOrCollection) continue;
+      const iterator = typeof funcOrCollection === 'function' ?
+        funcOrCollection() : funcOrCollection;
       if (iterator instanceof Array) {
         for (const result of iterator) {
           yield result;
@@ -40,45 +41,113 @@ export namespace Collection {
     }
   }
   export function* toIterableWithFilter<T>(
-      filterFunc: ((o: T) => boolean),
-      ...childIterators: (() => Collection<T>)[]
+      filterFunc: ((o: T, idx: number) => boolean),
+      index: {index: number},
+      ...childIterators: (undefined | Collection<T> |
+        (() => Collection<T>) | Collection<T>)[]
   ) {
-    for (const func of childIterators) {
-      if (!func) continue;
-      const iterator = func();
-      if (iterator instanceof Array) {
-        for (const result of iterator) {
-          if (!filterFunc || filterFunc(result)) {
+    if (!filterFunc) {
+      for (const funcOrCollection of childIterators) {
+        if (!funcOrCollection) continue;
+        const iterator = typeof funcOrCollection === 'function' ?
+          funcOrCollection() : funcOrCollection;
+        if (iterator instanceof Array) {
+          for (const result of iterator) {
             yield result;
+            index.index++;
+          }
+        } else {
+          let result = iterator.next();
+          while (!result.done) {
+            yield result.value;
+            result = iterator.next();
+            index.index++;
           }
         }
-      } else {
-        let result = iterator.next();
-        while (!result.done) {
-          if (!filterFunc || filterFunc(result.value)) {
-            yield result.value;
+      }
+    } else {
+      for (const func of childIterators) {
+        if (!func) continue;
+        const iterator = typeof func === 'function' ? func() : func;
+        if (iterator instanceof Array) {
+          for (const result of iterator) {
+            if (filterFunc(result, index.index++)) {
+              yield result;
+            }
           }
-          result = iterator.next();
+        } else {
+          let result = iterator.next();
+          while (!result.done) {
+            if (filterFunc(result.value, index.index++)) {
+              yield result.value;
+            }
+            result = iterator.next();
+          }
         }
       }
     }
   }
   export function* toIterableWithMap<T, A>(
-      mapFunc: ((o: T) => A),
-      ...childIterators: (() => Collection<T>)[]
+      mapFunc: ((o: T, idx: number) => A),
+      index: {index: number},
+      ...childIterators: (undefined | Collection<T>
+        | (() => Collection<T>) | Collection<T>)[]
   ) {
-    for (const func of childIterators) {
-      if (!func) continue;
-      const iterator = func();
+    for (const funcOrCollection of childIterators) {
+      if (!funcOrCollection) continue;
+      const iterator = typeof funcOrCollection === 'function' ?
+        funcOrCollection() : funcOrCollection;
       if (iterator instanceof Array) {
         for (const result of iterator) {
-          yield mapFunc(result);
+          yield mapFunc(result, index.index++);
         }
       } else {
         let result = iterator.next();
         while (!result.done) {
-          yield mapFunc(result.value);
+          yield mapFunc(result.value, index.index++);
           result = iterator.next();
+        }
+      }
+    }
+  }
+  export function* objectValuesToIterable<T, A>(
+      object: Record<string, T>,
+      filterFunc: undefined | ((o: T, idx: number) => boolean),
+      mapFunc: undefined | ((o: T, idx: number) => A),
+      index: {index: number},
+  ) {
+    if (filterFunc) {
+      if (mapFunc) {
+        // eslint-disable-next-line guard-for-in
+        for (const key in object) {
+          const value = object[key];
+          if (!filterFunc(value, index.index)) {
+            continue;
+          }
+          yield mapFunc(value, index.index++);
+        }
+      } else {
+        // eslint-disable-next-line guard-for-in
+        for (const key in object) {
+          const value = object[key];
+          if (!filterFunc(value, index.index)) {
+            continue;
+          }
+          yield value;
+          index.index++;
+        }
+      }
+    } else {
+      if (mapFunc) {
+        // eslint-disable-next-line guard-for-in
+        for (const key in object) {
+          yield mapFunc(object[key], index.index++);
+        }
+      } else {
+        // eslint-disable-next-line guard-for-in
+        for (const key in object) {
+          yield object[key];
+          index.index++;
         }
       }
     }
